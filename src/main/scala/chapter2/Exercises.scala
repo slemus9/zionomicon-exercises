@@ -14,8 +14,8 @@ object Exercises {
     try source.getLines.mkString finally source.close()
   }
 
-  val readFileZIO: String => Task[String] = 
-    readFile.andThen(ZIO(_))
+  val readFileZIO: String => Task[String] = file => 
+    ZIO { readFile(file) }
 
   /*
     2. Implement a ZIO version of the function writeFile by using the ZIO.attempt constructor.
@@ -27,29 +27,23 @@ object Exercises {
     try pw.write(text) finally pw.close()
   }
 
-  val writeFileZIO: String => String => Task[Unit] = { file: String => 
-    writeFile(file).andThen(ZIO(_))  
-  }
+  val writeFileZIO: String => String => Task[Unit] = file => text => 
+    ZIO { writeFile (file) (text) }
 
   /* 
     3.  Using the flatMap method of ZIO effects, together with the readFileZio
         and writeFileZio functions that you wrote, implement a ZIO version of
         the function copyFile.
   */
-  val copyFile: String => String => Unit = { dest => 
-    readFile.andThen(writeFile(dest))
+  val copyFile: String => String => Unit = { source => dest => 
+    
+    val contents = readFile(source)
+    writeFile (dest) (contents)
   }
 
-  implicit class ZIOKleisli [R, E, A, B] (f: A => ZIO[R, E, B]) {
-
-    def >=> [R1 <: R, E1 >: E, C] (g: B => ZIO[R1, E1, C]) = 
-      f.andThen(_ >>= g)
-  }
-
-  val copyFileZIO: String => String => Task[Unit] = { dest: String => 
-
-    readFileZIO >=> writeFileZIO(dest)
-  }
+  val copyFileZIO: String => String => Task[Unit] = source => dest => 
+    readFileZIO(source) >>= writeFileZIO(dest)
+  
 
   /*
     4. Rewrite the following ZIO code that uses flatMap into a for comprehension.
