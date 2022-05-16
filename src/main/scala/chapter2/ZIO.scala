@@ -104,7 +104,7 @@ object ZIO {
     _ => Left(e)
   )
 
-  def succeed [A] (a: => A): Task[A] = ZIO(
+  def succeed [A] (a: => A): UIO[A] = ZIO(
     _ => Right(a)
   )
 
