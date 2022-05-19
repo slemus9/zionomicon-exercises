@@ -2,8 +2,7 @@ package chapter2
 
 import scala.util.Try
 import scala.concurrent.ExecutionContext
-import zio.duration.Duration
-import zio.Has
+import zio.Duration
 import scala.concurrent.Future
 import java.io.IOException
 
@@ -151,13 +150,13 @@ object ZIO {
 
   object Clock {
 
-    def nanoTime: URIO[Has[Clock], Long] = ???
-    def sleep (duration: => Duration): URIO[Has[Clock], Unit] = ???
+    def nanoTime: URIO[Clock, Long] = ???
+    def sleep (duration: => Duration): URIO[Clock, Unit] = ???
   }
 
   def delay [R, E, A] (effect: ZIO[R, E, A]) (
     duration: Duration
-  ): ZIO[R with Has[Clock], E, A] =
+  ): ZIO[R with Clock, E, A] =
     Clock.sleep(duration) >> effect
 
   /*
@@ -167,9 +166,9 @@ object ZIO {
 
   object Console { 
 
-    val readLine: ZIO[Has[Console], IOException, String] = ???
-    def putStr (line: => String): URIO[Has[Console], Unit] = ???
-    def printLine (line: => String): URIO[Has[Console], Unit] = ???
+    val readLine: ZIO[Console, IOException, String] = ???
+    def putStr (line: => String): URIO[Console, Unit] = ???
+    def printLine (line: => String): URIO[Console, Unit] = ???
   }
 
   /*
@@ -181,9 +180,9 @@ object ZIO {
   object System {
 
     // Access the specified environment variable
-    def env (variable: String): ZIO[Has[System], SecurityException, Option[String]] = ???
+    def env (variable: String): ZIO[System, SecurityException, Option[String]] = ???
     // Access the specified system property
-    def property (prop: String): ZIO[Has[System], Throwable, Option[String]] = ???
+    def property (prop: String): ZIO[System, Throwable, Option[String]] = ???
   }
 
   // ZIO effects are stack safe

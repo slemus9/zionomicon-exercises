@@ -1,8 +1,8 @@
 package variance
 
 import zio._
-import zio.clock.Clock
-import zio.console.Console
+import zio.Clock
+import zio.Console
 
 /* 
   Contravariant means that the subtyping relation for 
@@ -51,9 +51,9 @@ object ContravarianceExamples {
   }
 
 
-  val nanoTime: URIO[Has[Clock], Long] = ???
+  val nanoTime: URIO[Clock, Long] = ???
 
-  def printLine (line: String): URIO[Has[Console], Unit] = ???
+  def printLine (line: String): URIO[Console, Unit] = ???
 
   /* 
     With contravariance we get a natural composition of effects.
@@ -65,8 +65,8 @@ object ContravarianceExamples {
     easily. Some libraries that do not use contravariance usually define
     a function called `narrow`, which is analogous to `widen`
   */
-  val printTime: URIO[Has[Clock] with Has[Console], Unit] =
-    nanoTime.map(_.toString) >>= printLine
+  val printTime: URIO[Clock with Console, Unit] =
+    nanoTime.map(_.toString).flatMap(printLine)
 
   trait ZIO [-R, +E, +A] {
 

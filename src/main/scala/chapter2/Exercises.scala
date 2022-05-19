@@ -1,9 +1,7 @@
 package chapter2
 
 import zio._
-import zio.console._
-import zio.random._
-import zio.{ App => ZIOApp }
+import zio.ZIOAppDefault
 import chapter2.{ ZIO => ZIOToy }
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.io.Source
@@ -21,7 +19,7 @@ object Exercises {
   }
 
   val readFileZIO: String => Task[String] = file => 
-    ZIO.effect { readFile(file) }
+    ZIO.attempt { readFile(file) }
 
   /*
     2. Implement a ZIO version of the function writeFile by using the ZIO.attempt constructor.
@@ -34,7 +32,7 @@ object Exercises {
   }
 
   val writeFileZIO: String => String => Task[Unit] = file => text => 
-    ZIO.effect { writeFile (file) (text) }
+    ZIO.attempt { writeFile (file) (text) }
 
   /* 
     3.  Using the flatMap method of ZIO effects, together with the readFileZio
@@ -48,7 +46,7 @@ object Exercises {
   }
 
   val copyFileZIO: String => String => Task[Unit] = source => dest => 
-    readFileZIO(source) >>= writeFileZIO(dest)
+    readFileZIO(source).flatMap(writeFileZIO(dest))
   
 
   /*
@@ -61,8 +59,8 @@ object Exercises {
       readLine.flatMap(name =>
       printLine(s"Hello, ${name}!")))
   */
-  def printLine (line: String) = ZIO(println(line))
-  val readLine = ZIO(scala.io.StdIn.readLine())
+  def printLine (line: String) = ZIO.attempt(println(line))
+  val readLine = ZIO.attempt(scala.io.StdIn.readLine())
   
   val whatIsYourName = for { 
     name  <- readLine
@@ -86,7 +84,7 @@ object Exercises {
     }
 
   */
-  val random = ZIO(scala.util.Random.nextInt(3) + 1)
+  val random = ZIO.attempt(scala.util.Random.nextInt(3) + 1)
 
   val guessANumber = for {
     n     <- random
@@ -191,7 +189,7 @@ object Exercises {
   ): Unit = ???
 
   def getCacheValueZIO (key: String): ZIO[Any, Throwable, String] =
-    ZIO.effectAsync { callback => 
+    ZIO.async { callback => 
       getCacheValue(
         key,
         callback.compose(ZIO.succeed(_)),
@@ -212,7 +210,7 @@ object Exercises {
   ): Unit = ???
 
   def saveUserRecordZIO (user: User): ZIO[Any, Throwable, Unit] =
-    ZIO.effectAsync { callback => 
+    ZIO.async { callback => 
       saveUserRecord(
         user,
         () => callback(ZIO.unit),
@@ -242,7 +240,7 @@ object Exercises {
   def readUntil (
     acceptInput: String => Boolean
   ): ZIO[Console, IOException, String] =
-    doWhile(getStrLn)(acceptInput)
+    doWhile(Console.readLine)(acceptInput)
 
   /*
     20. Using recursion, write a function that will continue evaluating the specified
@@ -264,16 +262,18 @@ object Exercises {
       command-line arguments. You should use the function readFileZio that
       you developed in these exercises, as well as ZIO.foreach.
 */
-object Cat extends ZIOApp {
+object Cat extends ZIOAppDefault {
   import Exercises.readFileZIO
 
-  def run (args: List[String]): URIO[ZEnv,ExitCode] = {
+  def run = {
 
     val readAndPrint = { file: String => 
-      readFileZIO(file).flatMap(putStrLn(_))
+      readFileZIO(file).flatMap(Console.printLine(_))
     }
 
-    ZIO.foreach(args)(readAndPrint).exitCode
+    getArgs.flatMap(
+      ZIO.foreach(_)(readAndPrint)
+    ).exitCode
   }
 }
 
@@ -281,14 +281,14 @@ object Cat extends ZIOApp {
   17. Using the Console, write a little program that asks the user what their
       name is, and then prints it out to them with a greeting.
 */
-object HelloHuman extends ZIOApp {
+object HelloHuman extends ZIOAppDefault {
 
-  def run(args: List[String]): URIO[ZEnv,ExitCode] = {
+  def run = {
     
     val greet = for {
-      _     <- putStrLn("Input your name:")
-      name  <- getStrLn
-      _     <- putStrLn(s"Hello $name!")
+      _     <- Console.printLine("Input your name:")
+      name  <- Console.readLine
+      _     <- Console.printLine(s"Hello $name!")
     } yield ()
 
     greet.exitCode
@@ -301,18 +301,18 @@ object HelloHuman extends ZIOApp {
       asks the user to guess a randomly chosen number between 1 and 3, and
       prints out if they were correct or not.
 */
-object NumberGuessing extends ZIOApp {
+object NumberGuessing extends ZIOAppDefault {
   import Exercises.doWhile
 
-  def run (args: List[String]): URIO[ZEnv,ExitCode] = {
+  def run = {
 
-    val random1to3 = nextIntBetween(1, 4)
+    val random1to3 = Random.nextIntBetween(1, 4)
     val askGuess = for {
       n     <- random1to3
-      _     <- putStrLn("Guess a number from 1 to 3:")
-      guess <- getStrLn
+      _     <- Console.printLine("Guess a number from 1 to 3:")
+      guess <- Console.readLine
       isCorrect = n.toString == guess
-      _     <- putStrLn(
+      _     <- Console.printLine(
         if (isCorrect) "You guessed right!"
         else s"You guessed wrong, the number was $n!"
       ) 
