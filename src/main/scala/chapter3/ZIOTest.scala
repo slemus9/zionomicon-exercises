@@ -19,10 +19,10 @@ object ExampleSpec extends ZIOSpecDefault {
   }
 
   val testAssertionConjunction = test ("Assertion conjunction") {
-    for {
+    for
       x <- ZIO.succeed(1)
       y <- ZIO.succeed(2)
-    } yield assert (x) (equalTo(1)) && assert (y) (equalTo(2))
+    yield assert (x) (equalTo(1)) && assert (y) (equalTo(2))
   }
 
   val testHasSameElements = test ("Has same elements") {
@@ -65,19 +65,19 @@ object TestGreet extends ZIOSpecDefault {
   import zio.test.TestEnvironment
 
   val greet: ZIO[Console, Nothing, Unit] = 
-    for {
+    for
       name  <- readLine.orDie
       _     <- printLine(s"Hello $name").orDie
-    } yield ()
+    yield ()
 
   val nameToTest = "Sebastian"
 
   def testGreet = 
-    for {
+    for
       _     <- TestConsole.feedLines(nameToTest)
       _     <- greet
       value <- TestConsole.output
-    } yield assert (value) (equalTo(Vector(s"Hello, $nameToTest!\n")))
+    yield assert (value) (equalTo(Vector(s"Hello, $nameToTest!\n")))
 
   def spec: Spec[TestEnvironment with Scope, Any] = suite ("Test greet") {
     test ("Hello") (assert (1 + 1) (equalTo(2)))

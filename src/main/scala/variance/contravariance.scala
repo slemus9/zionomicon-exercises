@@ -76,7 +76,7 @@ object ContravarianceExamples {
       the combined effect would also require those additional services
     */
     def flatMap [R1 <: R, E1 >: E, B] (
-      f: A => ZIO[R1, R1, B]
-    )
+      f: A => ZIO[R1, E1, B]
+    ): ZIO[R1, E1, B]
   }
 }

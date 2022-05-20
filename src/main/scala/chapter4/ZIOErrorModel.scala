@@ -16,6 +16,19 @@ object ZIOErrorModel {
     final case class Die (t: Throwable) extends Cause[Nothing]
     // Errors
     final case class Fail [+E] (e: E) extends Cause[E]
+
+    // Multiple errors
+    
+    // Two causes of failure that occur concurrently
+    final case class Both [+E] (
+      left: Cause[E], right: Cause[E]
+    ) extends Cause[E]
+
+    // Two causes of failure that occur sequentially
+    final case class Then [+E] (
+      left: Cause[E], right: Cause[E]
+    ) extends Cause[E]
+
   }
 
 
@@ -59,5 +72,45 @@ object ZIOErrorModel {
       will be converted to a defect.
     */
     def orDie (implicit ev: E <:< Throwable): ZIO[R, Nothing, A] = ???
+
+    /*
+      Fallback to the given 
+    */
+    def orElse [R1 <: R, E2, A1 >: A] (
+      that: ZIO[R1, E2, A1]
+    ): ZIO[R1, E2, A1] = ???
   }
+}
+
+object StackedErrors {
+  import zio._
+
+  trait DatabaseError
+  trait UserProfile
+
+  /*
+    In this example, the profile is optional within 
+    the database, so it's reasonable to type this function
+    with Option[UserProfile] on the success channel
+  */
+  def lookupProfile (
+    userId: String
+  ): ZIO[Any, DatabaseError, Option[UserProfile]] = ???
+
+  /*
+    An alternative to this is to shift all failures to
+    the error channel
+  */
+  def lookupProfile2 (
+    userId: String
+  ): ZIO[Any, Option[DatabaseError], UserProfile] = 
+    lookupProfile(userId).foldZIO(
+      error => ZIO.fail(Some(error)),
+      ZIO.fromOption(_)
+    )
+
+  def lookupProfile3 (
+    userId: String
+  ): ZIO[Any, Option[DatabaseError], UserProfile] =
+    lookupProfile(userId).some
 }

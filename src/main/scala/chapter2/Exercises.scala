@@ -62,10 +62,10 @@ object Exercises {
   def printLine (line: String) = ZIO.attempt(println(line))
   val readLine = ZIO.attempt(scala.io.StdIn.readLine())
   
-  val whatIsYourName = for { 
+  val whatIsYourName = for  
     name  <- readLine
     _     <- printLine(s"Hello, ${name}!")
-  } yield ()
+  yield ()
 
   /*
     5. Rewrite the following ZIO code that uses flatMap into a for comprehension.
@@ -86,15 +86,15 @@ object Exercises {
   */
   val random = ZIO.attempt(scala.util.Random.nextInt(3) + 1)
 
-  val guessANumber = for {
+  val guessANumber = for
     n     <- random
     _     <- printLine("Guess a number from 1 to 3:")
     guess <- readLine
     _     <- printLine(
-      if (guess == n.toString) "You guessed right!"
+      if guess == n.toString then "You guessed right!"
       else s"You guessed wrong, the number was $n!"
     ) 
-  } yield ()
+  yield ()
 
   /*
     6.  Implement the zipWith function in terms of the toy model of a ZIO
@@ -107,10 +107,10 @@ object Exercises {
     that: ZIOToy[R, E, B]
   ) (
     f: (A, B) => C
-  ): ZIOToy[R, E, C] = for {
+  ): ZIOToy[R, E, C] = for
     a <- self
     b <- that
-  } yield f(a, b)
+  yield f(a, b)
 
   /*
     7.  Implement the collectAll function in terms of the toy model of a ZIO
@@ -251,7 +251,7 @@ object Exercises {
     body: ZIO[R, E, A]
   ) (condition: A => Boolean): ZIO[R, E, A] =
     body.flatMap { a => 
-      if (condition(a)) ZIO.succeed(a)
+      if condition(a) then ZIO.succeed(a)
       else doWhile(body)(condition)  
     }
 }
@@ -267,9 +267,8 @@ object Cat extends ZIOAppDefault {
 
   def run = {
 
-    val readAndPrint = { file: String => 
+    val readAndPrint = (file: String) => 
       readFileZIO(file).flatMap(Console.printLine(_))
-    }
 
     getArgs.flatMap(
       ZIO.foreach(_)(readAndPrint)
@@ -285,11 +284,11 @@ object HelloHuman extends ZIOAppDefault {
 
   def run = {
     
-    val greet = for {
+    val greet = for
       _     <- Console.printLine("Input your name:")
       name  <- Console.readLine
       _     <- Console.printLine(s"Hello $name!")
-    } yield ()
+    yield ()
 
     greet.exitCode
   }
@@ -307,16 +306,16 @@ object NumberGuessing extends ZIOAppDefault {
   def run = {
 
     val random1to3 = Random.nextIntBetween(1, 4)
-    val askGuess = for {
+    val askGuess = for
       n     <- random1to3
       _     <- Console.printLine("Guess a number from 1 to 3:")
       guess <- Console.readLine
       isCorrect = n.toString == guess
       _     <- Console.printLine(
-        if (isCorrect) "You guessed right!"
+        if isCorrect then "You guessed right!"
         else s"You guessed wrong, the number was $n!"
       ) 
-    } yield isCorrect
+    yield isCorrect
 
     doWhile(askGuess)(identity(_)).exitCode
   }

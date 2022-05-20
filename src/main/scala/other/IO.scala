@@ -39,7 +39,7 @@ sealed trait IO [+A] { self =>
   def unsafeRunSync (): A = IO.runTrampolined(self)
 
   def unsafeToFuture () (implicit ec: ExecutionContext): Future[A] = 
-    Future { unsafeRunSync }
+    Future { unsafeRunSync() }
 }
 
 private final case class IOResult [+A] (val value: A) extends IO[A] {
@@ -104,10 +104,10 @@ object IO {
     whenA (cond) (raiseError(e))
 
   def unlessA (cond: Boolean) (action: => IO[Unit]): IO[Unit] = 
-    if (!cond) action else IO.unit
+    if !cond then action else IO.unit
 
   def whenA (cond: Boolean) (action: => IO[Unit]): IO[Unit] = 
-    if (cond) action else IO.unit
+    if cond then action else IO.unit
 
   val unit: IO[Unit] = IO.pure(())
 
@@ -124,7 +124,7 @@ object IOExamples extends App {
 
   def fib (n: Int, a: Long = 0, b: Long = 1): IO[Long] =
     IO(a + b).flatMap { b2 =>
-      if (n > 0) 
+      if n > 0 then 
         fib(n - 1, b, b2)
       else 
         IO.pure(a)
